@@ -25,6 +25,7 @@ app.post('/todo', (req, res) => {
       res.sendStatus(400);
     } else {
       res.status(201).json(newTodo);
+      // .then((newTodo) => res.status(201).json(newTodo));
     }
   });
 });
@@ -36,6 +37,7 @@ app.get('/todo', (req, res) => {
       res.sendStatus(400);
     } else {
       res.status(200).json(todos);
+      // .then((todos) => res.status(200).json(todos));
     }
   });
 });
@@ -47,6 +49,11 @@ app.get('/todo/:id', (req, res) => {
       res.status(200).json(todo);
     } else {
       res.sendStatus(404);
+      // .then((todo) => {
+      //   if (todo) {
+      //     res.status(200).json(todo);
+      //   }
+      // });
     }
   });
 });
@@ -58,6 +65,7 @@ app.put('/todo/:id', (req, res) => {
       res.status(200).json(todo);
     } else {
       res.sendStatus(404);
+      // .then((todo) => res.status(200).json(todo));
     }
   });
 });
@@ -69,6 +77,7 @@ app.delete('/todo/:id', (req, res) => {
       res.sendStatus(404);
     } else {
       res.sendStatus(204);
+      // .then(() => res.sendStatus(204));
     }
   });
 });

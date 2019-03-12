@@ -2,52 +2,43 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
-
-var items = {};
+var Promise = require('bluebird');
+Promise.promisifyAll(fs);
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId()
+    .then((id) => {
+      fs.writeFileAsync(`${exports.dataDir}/${id}.txt`, text);
+      return id;
+    })
+    .then((id) => (callback(null, {id, text})));
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
-  });
-  callback(null, data);
+  const data = [];
+  fs.readdirAsync(`${exports.dataDir}`).then((files) => (
+    Promise.all(files.map((file) => fs.readFileAsync(`${exports.dataDir}/${file}`)
+      .then((text) => (data.push({id: file.split('.')[0], text: String(text)})))))
+  )).then(() => (callback(null, data)));
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  fs.readFileAsync(`${exports.dataDir}/${id}.txt`)
+    .then((fileData) => (callback(null, {id, text: String(fileData)})));
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  fs.readFileAsync(`${exports.dataDir}/${id}.txt`)
+    .then(() => fs.writeFileAsync(`${exports.dataDir}/${id}.txt`, text))
+    .then(() => (callback(null, {id, text})));
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  fs.readFileAsync(`${exports.dataDir}/${id}.txt`)
+    .then(() => fs.unlink(`${exports.dataDir}/${id}.txt`))
+    .then(() => callback());
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
